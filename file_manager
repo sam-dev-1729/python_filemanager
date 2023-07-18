@@ -1,0 +1,58 @@
+import os
+import shutil
+from datetime import datetime, timedelta
+
+def categorize_files(folder_path):
+    # Create a dictionary to store file types and their respective folders
+    file_types = {
+        'Videos': 'videos',
+        'Songs': 'songs',
+        'Text Files': 'text_files',
+        'Others': 'others'
+    }
+
+    # Create folders for each file type if they don't exist
+    for folder in file_types.values():
+        folder_path = os.path.join(folder_path, folder)
+        os.makedirs(folder_path, exist_ok=True)
+
+    # Get the cutoff date for last modified files (1 year ago)
+    cutoff_date = datetime.now() - timedelta(days=365)
+
+    # Iterate over files in the specified folder
+    for file_name in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, file_name)
+
+        # Skip if the file is a directory
+        if os.path.isdir(file_path):
+            continue
+
+        # Get the file's last modified timestamp
+        modified_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+
+        # Skip if the file was modified after the cutoff date
+        if modified_time > cutoff_date:
+            continue
+
+        # Get the file extension and determine its type
+        file_extension = os.path.splitext(file_name)[1].lower()
+        file_type = None
+
+        if file_extension in ['.mp4', '.avi', '.mkv']:
+            file_type = 'Videos'
+        elif file_extension in ['.mp3', '.wav']:
+            file_type = 'Songs'
+        elif file_extension in ['.txt', '.docx']:
+            file_type = 'Text Files'
+        else:
+            file_type = 'Others'
+
+        # Move the file to its respective folder
+        destination_folder = os.path.join(folder_path, file_types[file_type])
+        shutil.move(file_path, destination_folder)
+
+        print(f"Moved '{file_name}' to '{destination_folder}'.")
+
+# Example usage
+folder_path = '/path/to/folder'
+categorize_files(folder_path)
